@@ -4,8 +4,36 @@ const request = require('supertest');
 const {app} = require('./../server');
 const {Product} = require('./../models/product');
 
+const products = [
+	{
+		code: 'DINJCLOX5VV',
+		description: 'CLOXACILLINE sodique, éq. 500 mg base, poudre, fl. IV',
+		batchNumberMandatory: true,
+		oldCode: ''
+	},
+	{
+		code: 'DORAIBUP4T-',
+		description: 'IBUPROFEN, 400mg, tab',
+		batchNumberMandatory: true,
+		oldCode: ''
+	},
+	{
+		code: 'DINFRINL1FBF1',
+		description: 'RINGER lactate, 1 l, poche souple, sans PVC',
+		batchNumberMandatory: true,
+		oldCode: ''
+	},
+	{
+		code: 'CWATBEDND0P22',
+		description: 'MOSQUITO NET deltamethrin (Permanet 2.0) 2 persons',
+		batchNumberMandatory: false,
+		oldCode: 'CWATBEDN-----'
+	}]
+
 beforeEach((done) => {
-	Product.remove({}).then(() => done());
+	Product.remove({}).then(() => {
+		return Product.insertMany(products);
+	}).then(() => done());
 });
 
 describe('POST /products', () => {
@@ -29,7 +57,7 @@ describe('POST /products', () => {
 				if(err){
 					return done(err);
 				}
-				Product.find().then((products) => {
+				Product.find({code}).then((products) => {
 					expect(products.length).toBe(1);
 					expect(products[0].code).toBe(code);
 					done();
@@ -49,9 +77,21 @@ describe('POST /products', () => {
 					return done(err)
 				}
 			Product.find().then((products) => {
-				expect(products.length).toBe(0);
+				expect(products.length).toBe(4);
 				done();
 			}).catch((e) => done(e));
 		});	
+	});
+});
+
+describe('GET /products', () => {
+	it('should get 4 items back', (done) => {
+		request(app)
+			.get('/products')
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.products.length).toBe(4);
+			})
+			.end(done);
 	});
 });

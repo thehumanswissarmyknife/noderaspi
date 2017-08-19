@@ -18,16 +18,24 @@ app.use(bodyParser.json());
 
 app.post('/products', (req, res) => {
 
-	var prod = new Product(req.body);
-	prod.save().then((prod) => {
-		res.status(200).send(prod);
+	var product = new Product(req.body);
+	product.save().then((product) => {
+		res.status(200).send(product);
 	}, (e) => {
 		res.status(400).send(e);
 		// console.log(e);
 	});
 
 });
-// app.set('view engine', 'hbs');
+
+app.get('/products', (req, res) => {
+	Product.find().then((products) => {
+		res.send({products});
+	}, (e) => {
+		res.status(400).send(e);
+})
+
+}); 
 
 // get a log of what requests were done!
 app.use((req, res, next) => {
