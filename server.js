@@ -9,49 +9,21 @@ var {User} = require('./models/user');
 var {Product} = require('./models/product');
 
 
-
-// var newUser = new User({
-// 	userName: '  denis',
-// 	userEmail: 'dv@peter.de',
-// 	userFunction: 'counter',
-// 	userLevel: 'noob'
-// });
-// newUser.save().then((user) => {
-// 	console.log('User created: ', user);
-// }, (e) => {
-// 	console.log('User not created: ', e);
-// });
-
-// var newProduct= new Product({
-// 	code: 'meinProd2222222',
-// 	description: 'toll',
-// 	oldCode: 'FALSE',
-// 	batchNumberMandatory: false
-// });
-
-// newProduct.save().then((prod) => {
-// 	console.log('Product created: ', prod);
-// }, (e) => {
-// 	console.log('Product not created: ', e);
-// });
-
-
 // Server stuff
 var app = express();
 app.listen(3000, () => {
-	console.log('server is up and listening to pport 3000');
+	console.log('server is up and listening to port 3000\n');
 });
 app.use(bodyParser.json());
 
 app.post('/products', (req, res) => {
-	console.log(req.body);
+
 	var prod = new Product(req.body);
 	prod.save().then((prod) => {
 		res.status(200).send(prod);
-		console.log('product created', prod.code);
 	}, (e) => {
 		res.status(400).send(e);
-		console.log(e);
+		// console.log(e);
 	});
 
 });
@@ -79,4 +51,6 @@ app.get('/setup', (req, res) => {
 		pageTitle: 'Setup'
 	});
 });
+
+module.exports = {app};
 

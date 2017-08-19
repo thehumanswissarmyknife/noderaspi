@@ -1,7 +1,11 @@
-const {MongoClient, ObjectId} = require('mongodb');
+// const {MongoClient, ObjectId} = require('mongodb');
+var {mongoose} = require('./db/mongoose');
+var {User} = require('./models/user');
+var {Product} = require('./models/product');
+
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 
-var workbook = XLSX.readFile(__dirname + '/imports/Arbeitsmappe1.xlsx');
+var workbook = XLSX.readFile(__dirname + '/imports/data_products_all.xls');
 var first_sheet_name = workbook.SheetNames[0];
 var address_of_cell = 'A1';
 var worksheet = workbook.Sheets[first_sheet_name];
