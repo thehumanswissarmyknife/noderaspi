@@ -1,7 +1,7 @@
 const {MongoClient, ObjectId} = require('mongodb');
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 
-var workbook = XLSX.readFile(__dirname + '/imports/test.xml');
+var workbook = XLSX.readFile(__dirname + '/imports/Arbeitsmappe1.xlsx');
 var first_sheet_name = workbook.SheetNames[0];
 var address_of_cell = 'A1';
 var worksheet = workbook.Sheets[first_sheet_name];
@@ -30,8 +30,6 @@ function camelize_header_row(sheet) {
 
 }
 
-
-
 function camelize(str) {
   return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
     if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
@@ -39,58 +37,35 @@ function camelize(str) {
   });
 }
 
-
-
 MongoClient.connect('mongodb://localhost:30001/Stockcount', (err, db) => {
 	if (err) {
 		return console.log('Unable to connect to DB');
 	};
 	console.log('Connection to MongoDB successful');
 
-
-
-
-
 	dataForDb.forEach((item) => {	
 
-		// first check, if the item is already in the db -> also check in the old codes!!!!
-		var codeToFind = new RegExp(item.code);
-		db.collection('Products').findOne({"oldCode": codeToFind}).then((doc) => {
-			if (doc) {
-				console.log("found it", JSON.stringify(doc, undefined, 2));
-				db.collection('Products').updateOne({_id:doc._id}, {$set: {code: item.oldCode}});
-				console.log("changed it", JSON.stringify(doc, undefined, 2));
-			};
-			
-		}, (err) => {
-			console.log("item not found");
-		});
+		// split the old codes into an array
+		var str = item.oldCode;
+		var array = str.split("|").map(function(item) {
+			  return item.trim();
+			});
 
-		db.collection('Products').findOne({"code": item.code}).then((doc) => {
-			if (doc) {
-				console.log('Item already in db, verifying content');
-				//check all characteristics
+		// then for each of the old codes, look in the db, if this now 'old code' fomerly was existing as code
+		for (var i = 0, len = array.length; i < len; i++) {
+			db.collection('Products').replaceOne(
+				{code: array[i]},
+				item,
+				{upsert: false}
+			);
+		}
+		// now check if the code of the current item is in the database - if so, replace the item
 
-				// if the item is in the db and no change has occured, create a log file with its name
-
-				// if the item is in the db, but something (code, batchmanagement, etc) has changed, update the existing document!
-
-			} else {
-				// item is not in the db, so add it
-				db.collection('Products').insertOne(item, (err, result) => {
-				if(err) {
-					return console.log('Unable to insert user', err);
-				}
-				});
-
-			}
-		}, (err) => {
-
-		})
-
-		
-
-		
+		db.collection('Products').replaceOne(
+			{code: item.code},
+			item,
+			{upsert: true}
+		);
 
 	});
 

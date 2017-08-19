@@ -1,5 +1,7 @@
 node_modules/
 logs/
 imports/
+Playground/
+mongo-data/
 server.log
 package-lock.json
