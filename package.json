@@ -13,6 +13,7 @@
     "body-parser": "^1.17.2",
     "express": "^4.15.4",
     "hbs": "^4.0.1",
+    "leven": "^2.1.0",
     "lodash": "^4.17.4",
     "mongodb": "^2.2.31",
     "mongoose": "^4.11.7",

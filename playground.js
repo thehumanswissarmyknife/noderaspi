@@ -1,4 +1,4 @@
-// const {MongoClient, ObjectId} = require('mongodb');
+ const {MongoClient, ObjectId} = require('mongodb');
 var {mongoose} = require('./db/mongoose');
 var {User} = require('./models/user');
 var {Product} = require('./models/product');
@@ -41,11 +41,12 @@ function camelize(str) {
   });
 }
 
-MongoClient.connect('mongodb://localhost:30001/Stockcount', (err, db) => {
+ MongoClient.connect('mongodb://localhost:30001/Stockcount', (err, db) => {
 	if (err) {
 		return console.log('Unable to connect to DB');
 	};
 	console.log('Connection to MongoDB successful');
+	var i = 1
 
 	dataForDb.forEach((item) => {	
 
@@ -57,7 +58,7 @@ MongoClient.connect('mongodb://localhost:30001/Stockcount', (err, db) => {
 
 		// then for each of the old codes, look in the db, if this now 'old code' fomerly was existing as code
 		for (var i = 0, len = array.length; i < len; i++) {
-			db.collection('Products').replaceOne(
+			db.collection('products').replaceOne(
 				{code: array[i]},
 				item,
 				{upsert: false}
@@ -65,13 +66,15 @@ MongoClient.connect('mongodb://localhost:30001/Stockcount', (err, db) => {
 		}
 		// now check if the code of the current item is in the database - if so, replace the item
 
-		db.collection('Products').replaceOne(
+		db.collection('products').replaceOne(
 			{code: item.code},
 			item,
 			{upsert: true}
 		);
+		console.log('current item:', item.code);
 
 	});
+	console.log('Done');
 
 	
 

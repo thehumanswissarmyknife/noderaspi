@@ -28,7 +28,8 @@ const products = [
 		description: 'MOSQUITO NET deltamethrin (Permanet 2.0) 2 persons',
 		batchNumberMandatory: false,
 		oldCode: 'CWATBEDN-----'
-	}]
+	}
+];
 
 beforeEach((done) => {
 	Product.remove({}).then(() => {
