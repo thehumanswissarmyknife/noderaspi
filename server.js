@@ -175,6 +175,43 @@ app.post('/counteditems', (req, res) => {
 	});
 });
 
+// retrieve all countedItems
+
+app.get('/counteditems', (req, res) => {
+	CountedItem.find().then((countedItems) => {
+		res.status(200).send({countedItems});
+	}, (e) => {
+		res.status(400).send(e);
+	})
+});
+
+// retrieve ONE countedItem by ID
+app.get('/counteditems/:id', (req, res) => {
+	if(!ObjectID.isValid(req.params.id)){
+		return res.status(404).send({error: 'bad id'});
+	};
+
+	var id = req.params.id;
+	CountedItem.findById(id).then((countedItems) => {
+		res.status(200).send({countedItems});
+	}, (e) => {
+		res.status(400).send(e);
+	})
+});
+
+// retrieve all counteditems for ONE product by CODE
+app.get('/counteditemsForProductcode/:productCode', (req, res) => {
+	var productCode = req.params.productCode;
+	CountedItem.find({
+		code: productCode}
+		).then((countedItems) => {
+		res.status(200).send({countedItems});
+	}, (e) => {
+		res.status(400).send(e);
+	})
+
+});
+
 // USERS
 
 // only for intial testing!!!!!
@@ -259,6 +296,7 @@ app.get('/messages/:recipientId', (req, res) => {
 });
 
 
+//  what do we want to see, when we log into the server???
 
 app.get('/', (req, res) => {
 	res.send('<h1>no content</h1>');

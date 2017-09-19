@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 var CountedItem = mongoose.model('CountedItem', {
-	code: {
+	productCode: {
 		type: String,
 		required: true,
 		minlength: 11,
