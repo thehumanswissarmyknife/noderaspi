@@ -12,6 +12,9 @@ var ReportingList = mongoose.model('ReportingList', {
 	},
 	comment: {
 		type: String
+	},
+	products: {
+		type: Array
 	}
 	// do we need the LIST ID???????
 });

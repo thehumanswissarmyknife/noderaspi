@@ -11,6 +11,8 @@ var {Product} = require('./models/product');
 var {Batch} = require('./models/batch');
 var {CountedItem} = require('./models/counteditem');
 var {Message} = require('./models/message');
+var {ReportingList} = require('./models/reportinglist');
+var {Warehouse} = require('./models/warehouse');
 
 // Server stuff
 var app = express();
@@ -33,9 +35,6 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
-/////////////////////
-// POSTING SECTION //
-/////////////////////
 
 app.post('/products', (req, res) => {
 
@@ -153,6 +152,7 @@ app.post('/counteditems', (req, res) => {
 	};
 	var countedItem = new CountedItem(req.body);
 
+// somethings wrong here!!!!!
 	if(!ObjectID.isValid(countedItem.userId))
 	var batchId = ObjectID(countedItem.batchId);
 
@@ -294,6 +294,26 @@ app.get('/messages/:recipientId', (req, res) => {
 		res.status(400).send({e});
 	});
 });
+
+// REPORTINGLISTS
+// get ALL reportinglists
+app.get('/reportinglists', (req, res) => {
+	ReportingList.find().then((reportinglists) => {
+		res.status(200).send({reportinglists});
+	}, (e) => {
+		res.status(400).send({e});
+	})
+});
+
+// WAREHOUSES
+// get all warehouses
+app.get('/warehouses', (req, res) => {
+	Warehouse.find().then((warehouses) => {
+		res.status(200).send({warehouses});
+	}, (e) => {
+		res.status(400).send({e});
+	})
+})
 
 
 //  what do we want to see, when we log into the server???
