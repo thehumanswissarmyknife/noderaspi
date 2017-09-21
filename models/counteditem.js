@@ -22,10 +22,6 @@ var CountedItem = mongoose.model('CountedItem', {
 	user: {
 		type: String,
 		required: true
-	},
-	timeStamp: {
-		type: Number,
-		required: true
 	}
 });
 

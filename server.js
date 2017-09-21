@@ -58,7 +58,7 @@ app.post('/products', (req, res) => {
 // get ALL products
 app.get('/products', (req, res) => {
 	Product.find().then((products) => {
-		res.status(200).send({products});
+		res.status(200).send({count: products.length, products});
 	}, (e) => {
 		res.status(400).send(e);
 	})
@@ -147,10 +147,11 @@ app.get('/batchesForProduct/:productCode', (req, res) => {
 // post ONE counteditem
 
 app.post('/counteditems', (req, res) => {
-	if (!ObjectID.isValid(countedItem.batchId) || !ObjectID.isValid(countedItem.userId)) {
+	
+	var countedItem = new CountedItem(req.body);
+	if (!ObjectID.isValid(countedItem.batchId)) {
 		return res.status(404).send({error: 'batch it or counteitemID invalid'});
 	};
-	var countedItem = new CountedItem(req.body);
 
 // somethings wrong here!!!!!
 	if(!ObjectID.isValid(countedItem.userId))
@@ -319,7 +320,7 @@ app.get('/warehouses', (req, res) => {
 //  what do we want to see, when we log into the server???
 
 app.get('/', (req, res) => {
-	res.send('<h1>no content</h1>');
+	res.send({server: "online"});
 });
 
 app.get('/setup', (req, res) => {
