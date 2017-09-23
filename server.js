@@ -320,7 +320,10 @@ app.get('/warehouses', (req, res) => {
 //  what do we want to see, when we log into the server???
 
 app.get('/', (req, res) => {
-	res.send({server: "online"});
+	res.send({
+		name: "MSF Stockcount Server",
+		status: "online", 
+		version: "1.0"});
 });
 
 app.get('/setup', (req, res) => {
