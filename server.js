@@ -13,6 +13,9 @@ var {CountedItem} = require('./models/counteditem');
 var {Message} = require('./models/message');
 var {ReportingList} = require('./models/reportinglist');
 var {Warehouse} = require('./models/warehouse');
+const _ = require('lodash');
+
+const myVersion = "1.0";
 
 // Server stuff
 var app = express();
@@ -36,33 +39,35 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 
-app.post('/products', (req, res) => {
+app.post('/products', async (req, res) => {
 
 	// regular expression to check for codes in the old codes field
 	var codeRG = new RegExp(req.body.code);
-
-	// check if the product already exists?
-	Product.find({$or: [{code: codeRG}, {oldCode: codeRG}]}).then((product) => {
+	try {
+		var product = await Product.find({$or: [{code: codeRG}, {oldCode: codeRG}]});
 		if(product.length>0){
 			return res.status(404).send({product, error: 'already exists'});
 		}
 		var product = new Product(req.body);
-		product.save().then((product) => {
-			res.status(200).send({product, status: 'created'});
-		}, (e) => {
-			res.status(400).send(e);
-		});
-	});
+
+		product = await product.save();
+		res.status(200).send({product, status: 'created'});
+	} catch (e) {
+		res.status(400).send(e);
+	}
+
 });
 
-// get ALL products
-app.get('/products', (req, res) => {
-	Product.find().then((products) => {
-		res.status(200).send({count: products.length, products});
-	}, (e) => {
-		res.status(400).send(e);
-	})
 
+// get ALL products
+app.get('/products', async (req, res) => {
+
+	try {
+		var products = await Product.find();
+		res.status(200).send({count: products.length, products});
+	} catch (e) {
+		res.status(400).send(e);
+	}
 }); 
 
 // get ONE product by ID
@@ -176,6 +181,16 @@ app.post('/counteditems', (req, res) => {
 	});
 });
 
+// app.patch('/counteditems/:id', (req, res) => {
+// 	var id = req.params.id;
+// 	var body = _.pick(req.body, ['productCode', 'batchId', 'totalQuantity', 'sud', 'user']);
+
+// 	if(!ObjectID.isValid(id)) {
+// 		return res.status(404).send({error: "item not known"});
+// 	}
+
+// });
+
 // retrieve all countedItems
 
 app.get('/counteditems', (req, res) => {
@@ -219,13 +234,21 @@ app.get('/counteditemsForProductcode/:productCode', (req, res) => {
 // post ONE user
 app.post('/users', (req, res) => {
 
-	var user = new User(req.body);
+	var body = _.pick(req.body, ['userName', 'userEmail', 'userPassword', 'userLevel', 'userFunction']);
+	var user = new User(body);
 	user.save().then((user) => {
-		res.status(200).send({user, status: 'created'});
-	}, (e) => {
-		res.status(400).send(e);
-		// console.log(e);
+		res.status(200).send({user});
+	}).catch((e) => {
+		res.status(400).send({e});
 	});
+
+	// var user = new User(req.body);
+	// user.save().then((user) => {
+	// 	res.status(200).send({user, status: 'created'});
+	// }, (e) => {
+	// 	res.status(400).send(e);
+	// 	// console.log(e);
+	// });
 });
 
 // get ALL users
@@ -323,7 +346,7 @@ app.get('/', (req, res) => {
 	res.send({
 		name: "MSF Stockcount Server",
 		status: "online", 
-		version: "1.0"});
+		version: myVersion});
 });
 
 app.get('/setup', (req, res) => {
