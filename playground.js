@@ -59,7 +59,7 @@ function camelize(str) {
 		// then for each of the old codes, look in the db, if this now 'old code' fomerly was existing as code
 		for (var i = 0, len = array.length; i < len; i++) {
 			db.collection('products').replaceOne(
-				{code: array[i]},
+				{oldCode: array[i]},
 				item,
 				{upsert: false}
 			);

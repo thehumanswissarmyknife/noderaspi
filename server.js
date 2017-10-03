@@ -1,11 +1,13 @@
-var express = require('express');
-var bodyParser = require('body-parser');
 
- const hbs = require('hbs');
- const fs = require ('fs');
-
+// general utils
 var {ObjectID} = require('mongodb');
 var {mongoose} = require('./db/mongoose');
+const _ = require('lodash');
+var bodyParser = require('body-parser');
+const hbs = require('hbs');
+const fs = require ('fs');
+
+// Myd models
 var {User} = require('./models/user');
 var {Product} = require('./models/product');
 var {Batch} = require('./models/batch');
@@ -13,14 +15,94 @@ var {CountedItem} = require('./models/counteditem');
 var {Message} = require('./models/message');
 var {ReportingList} = require('./models/reportinglist');
 var {Warehouse} = require('./models/warehouse');
-const _ = require('lodash');
 
+
+
+
+// the server and socket
+var app = require('express')();
+const socketIO = require('socket.io');
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+
+// server.listen(3000);
+server.listen(3000, () => {
+	console.log('server is up and listening to port 3000\n');
+});
+
+// my constants
 const myVersion = "1.0";
 
-// Server stuff
-var app = express();
-app.listen(3000, () => {
-	console.log('server is up and listening to port 3000\n');
+// SOCKET IO
+// initial connection
+io.on('connection', (socket) => {
+  console.log('New user connected', socket.id);
+
+// write the connection into the logfile
+  var now = new Date().toString();
+  var logLine = `${now}: ID - ${socket.id}`;
+  console.log(logLine);
+  fs.appendFile('logs/socketIO.log', logLine +  '\n', (err) => {
+  	if (err) {
+  		console.log('Unable to write to file server.log');
+  	}
+  });
+
+// send the latest info to the client: last countedItem and the totale counted Items
+  // var lastServerCI = getLastServerCI(socket);
+
+  // // listen to newBatch - events
+  // socket.on('newBatch', async (newBatch) => {
+  // 	var thisBatch = new Batch(newBatch);
+  // 	console.log('newBatchreceived', {newBatch, status: 'created'});
+
+  // 	try {
+  // 		var savedBatch = await thisBatch.save();
+  // 		console.log('Batch saved', {newBatch, status: 'created'});
+  // 	  	socket.emit('batchCreated', {newBatch, status: 'created'});
+  // 	} catch (e) {
+  // 		console.log('ERROR: Batch saved', e);
+  // 		socket.emit('batchSavingError', e);
+  // 	}
+  // });
+
+  socket.on('getInitialSetup', async () => {
+  	console.log('initial setup, sending ...');
+  	try {
+  		var users = await User.find();
+  		var products = await Product.find();
+  		var warehouses = await Warehouse.find();
+  		var reportinglists = await ReportingList.find();
+  		var messages = await Message.find();
+  		socket.emit('sendInitialSetup', {
+  			qUsers: users.length, 
+  			users, 
+  			qProducts: products.length, 
+  			products, 
+  			qWarehouses: warehouses.length, 
+  			warehouses,
+  			qReportinglists: reportinglists.length,
+  			reportinglists, 
+  			qMessages: messages.length,
+  			messages
+  		});
+  	} catch (e) {
+  		console.log()
+  	}
+  })
+
+  socket.on('getProducts', async () => {
+  	console.log("someone wants all products", "yeah");
+
+  	try {
+		var products = await Product.find();
+		socket.emit('allProducts', {count: products.length, products});
+	} catch (e) {
+		console.log('ERROR: Batch saved', e);
+	}
+
+  })
+
 });
 
 // get a log of what requests were done!
@@ -35,6 +117,28 @@ app.use((req, res, next) => {
 	});
 	next();
 });
+
+
+var getLastServerCI = async (socket) =>{
+
+	let lastServerCI;
+	let totalCountedItems;
+
+	// try{
+	// 	lastServerCI = await CountedItem.find({}, {_id: 1}).sort({_id: -1}).limit(1);
+	// 	totalCountedItems = await CountedItem.count();
+	// } catch (e) {
+	// 	logger.err('MongoError', e);
+	// }
+	
+	var object = {
+		lastServerCI: lastServerCI[0]._id,
+		totalCountedItemsOnServer: totalCountedItems
+	}
+	socket.emit('lastServerCI', object);
+
+	return object;
+};
 
 app.use(bodyParser.json());
 
@@ -130,6 +234,16 @@ app.get('/batches', (req, res) => {
 	}, (e) => {
 		res.status(400).send(e);
 	});
+});
+
+// get ALL batches for ALL products
+app.get('/lastBatchAdded', async (req, res) => {
+	try{
+		let lastBatchAdded = await Batch.find().sort({_id: -1}).limit(1);
+		res.status(200).send(lastBatchAdded);
+	} catch (e) {
+		res.status(400).send(e);
+	}
 });
 
 // get ALL batches for ONE product
@@ -342,6 +456,7 @@ app.get('/warehouses', (req, res) => {
 
 //  what do we want to see, when we log into the server???
 
+// static directory for the / directory
 app.get('/', (req, res) => {
 	res.send({
 		name: "MSF Stockcount Server",
@@ -349,6 +464,7 @@ app.get('/', (req, res) => {
 		version: myVersion});
 });
 
+// render setup.hbs for the /setup route
 app.get('/setup', (req, res) => {
 	res.render('setup.hbs', {
 		pageTitle: 'Setup'
